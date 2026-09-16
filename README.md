@@ -214,3 +214,36 @@ after an idle period may take 30–60 seconds while the instance restarts — th
 free-tier behavior, not an application defect. The self-healing `ConnectionPool`
 (`psycopg_pool`, added in Milestone 4) is designed to recover cleanly from the database side
 of this same idle scenario.
+
+## Demo / Test Credentials
+
+The live deployment is pre-seeded with 8 fake demo employees for evaluation purposes — no
+real personal data is used anywhere in this project.
+
+**Login**: use any employee's email below with the password pattern
+`password{last 4 digits of employee ID}` (e.g. `EMP1001` → `password1001`).
+
+| Employee ID | Name | Department | Balance | Email |
+|---|---|---|---|---|
+| EMP1001 | Mahi Joshi | Engineering | 18 | mahi.joshi@company.com |
+| EMP1002 | Sagar Mehta | Engineering | 20 | sagar.mehta@company.com |
+| EMP1003 | Radha Kulkarni | Engineering | 15 | radha.kulkarni@company.com |
+| EMP1004 | Suhani Mishra | Marketing | 2 | suhani.mishra@company.com |
+| EMP1005 | Kartik Sharma | Marketing | 20 | kartik.sharma@company.com |
+| EMP1006 | Anjali Verma | Engineering (no manager) | 20 | anjali.verma@company.com |
+| EMP1007 | Suhani Pande | Marketing (no manager) | 20 | suhani.pande@company.com |
+| EMP1008 | Raj Deshmukh | Engineering | 20 | raj.deshmukh@company.com |
+
+**Seeded scenarios worth trying:**
+- `EMP1002` and `EMP1003` are pre-seeded as on-leave for a team-conflict overlap window,
+  useful for testing the mixed-conflict / escalation paths
+- `EMP1004` has a low balance (2 days), useful for testing the Reject path
+- A test holiday is seeded separately (see below) for testing holiday-aware date logic
+
+### Resetting demo data
+Two separate scripts control the seeded data — running one does **not** reset the other:
+python scripts\seed_data.py # employees, leave balances, sessions, team calendar
+python scripts\seed_holidays.py # official holidays (a separate table)
+
+Re-running `seed_data.py` will reset any changes made during testing (approvals, balance
+deductions, extensions, cancellations) back to the original seeded state.
