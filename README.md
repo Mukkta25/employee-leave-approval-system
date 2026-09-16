@@ -172,7 +172,9 @@ The mentor's requirement to "deliberately fail an agent" was tested across sever
 
 **Platform**: Render (Web Service, Free tier)
 **Region**: Singapore (Southeast Asia) — matches the Neon database region for lower latency
-**Live URL**: https://employee-leave-approval-system.onrender.com
+**Live URL (App)**: https://employee-leave-approval-system.onrender.com/app/login.html
+**API Root (health check)**: https://employee-leave-approval-system.onrender.com/ — returns a JSON status message confirming the service is running; the actual application is at the App link above
+**API Docs (Swagger)**: https://employee-leave-approval-system.onrender.com/docs
 
 ### What's deployed
 A single Render Web Service runs the entire application — there is no separate frontend
