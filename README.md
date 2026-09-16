@@ -168,5 +168,49 @@ The mentor's requirement to "deliberately fail an agent" was tested across sever
 - **Duplicate exception handler**: a manual paste left `rate_limit_exceeded_handler` defined twice in `api/main.py`. Harmless at runtime (Python silently keeps the second definition), but confusing and sloppy - removed the duplicate, keeping one clean definition
 - **Lost validation handler**: the custom `RequestValidationError` handler documented back in Milestone 2 (and fixed further in Milestone 3 to build its message dynamically) had been dropped entirely during the M4 rate-limiting full-file rewrite of `api/main.py` - the import remained but the handler itself was gone, meaning malformed requests silently fell back to FastAPI's raw technical error format instead of the friendly message already demoed to sir. Re-added, verified live: a request missing the `password` field now correctly returns `"Your request is missing or has invalid value(s) for: password. Please check and try again."` instead of raw Pydantic JSON
 
-### Known limitations / remaining for Milestone 4
-- **Deployment** (Render or Railway) not yet done
+## Deployment
+
+**Platform**: Render (Web Service, Free tier)
+**Region**: Singapore (Southeast Asia) — matches the Neon database region for lower latency
+**Live URL**: https://employee-leave-approval-system.onrender.com
+
+### What's deployed
+A single Render Web Service runs the entire application — there is no separate frontend
+deployment. `api/main.py` already mounts the frontend as static files
+(`StaticFiles(directory="frontend", html=True)` at `/app`), so one FastAPI process serves
+both the REST API and the HTML/CSS/JS pages.
+
+- App root / health check: `/`
+- API docs (Swagger UI): `/docs`
+- Frontend: `/app/login.html`, `/app/dashboard.html`, `/app/new-request.html`,
+  `/app/monitoring.html`
+
+### Build & start configuration
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn api.main:app --host 0.0.0.0 --port $PORT`
+  (Render assigns a dynamic port at runtime via `$PORT`; the app must bind to it rather than
+  a hardcoded port.)
+- **Python version**: Render's current default (3.14.3), matching local development (3.14.0)
+
+### Environment variables (configured in Render's dashboard, never committed)
+- `GROQ_API_KEY`
+- `DATABASE_URL` (Neon Postgres, pooled connection with `sslmode=require&channel_binding=require`)
+- `JWT_SECRET`
+- `JWT_EXPIRY_MINUTES`
+
+### Verification performed on the live deployment
+- Root health-check endpoint responds correctly
+- Full leave-request workflow tested live: login → new request → multi-agent processing →
+  Approve/Reject/Escalate outcome, confirmed against a real seeded employee
+- Audit logging and the Monitoring dashboard both confirmed populating correctly from the
+  live database
+- Rate limiting (slowapi) confirmed triggering a `429` after repeated rapid requests, same as
+  local testing in Milestone 4
+- Weekend/holiday extension rejection re-verified on the deployed environment
+
+### Known platform behavior (not a bug)
+Render's free tier spins the service down after a period of inactivity. The first request
+after an idle period may take 30–60 seconds while the instance restarts — this is expected
+free-tier behavior, not an application defect. The self-healing `ConnectionPool`
+(`psycopg_pool`, added in Milestone 4) is designed to recover cleanly from the database side
+of this same idle scenario.
